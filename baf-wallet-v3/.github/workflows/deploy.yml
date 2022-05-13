@@ -1,0 +1,79 @@
+name: DeployCI
+
+on:
+  push:
+    branches: [master, deploy-work, deploy-work-2]
+
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      # Frontend and bot build
+      - name: "Dep and install"
+        run: |
+          npm i
+          npm run client-gen
+          npx nx run api:build:test
+          node scripts/create-dist-api-package-json.js
+          echo 'npm start' > dist/apps/api/Procfile
+          npx nx run bot:build:test
+          npx nx build-deploy-test frontend
+          node scripts/create-dist-bot-package-json.js
+          echo 'worker: npm start' > dist/apps/bot/Procfile
+          cd docs && npm i && npm run build
+        env:
+          DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+          TORUS_VERIFIER_NAME: ${{ secrets.TORUS_VERIFIER_NAME }}
+          TORUS_PROXY_ADDRESS: ${{ secrets.TORUS_PROXY_ADDRESS }}
+          TORUS_NETWORK: ${{ secrets.TORUS_NETWORK }}
+
+      - uses: seanmiddleditch/gha-publish-to-git@master
+        with:
+          repository: bafnetwork/baf-wallet-deploy-frontend
+          branch: main
+          github_token: "${{ secrets.GITHUB_TOKEN  }}"
+          github_pat: "${{ secrets.GH_PAT }}"
+          source_folder: dist/apps/frontend
+
+      - uses: seanmiddleditch/gha-publish-to-git@master
+        with:
+          repository: bafnetwork/baf-wallet-deploy-bot
+          branch: main
+          github_token: "${{ secrets.GITHUB_TOKEN  }}"
+          github_pat: "${{ secrets.GH_PAT }}"
+          source_folder: dist/apps/bot
+
+      - uses: seanmiddleditch/gha-publish-to-git@master
+        with:
+          repository: bafnetwork/baf-wallet-docs-deploy
+          branch: main
+          github_token: "${{ secrets.GITHUB_TOKEN  }}"
+          github_pat: "${{ secrets.GH_PAT }}"
+          source_folder: docs/build
+
+
+      - uses: seanmiddleditch/gha-publish-to-git@master
+        with:
+          repository: bafnetwork/baf-wallet-deploy-api
+          branch: main
+          github_token: "${{ secrets.GITHUB_TOKEN  }}"
+          github_pat: "${{ secrets.GH_PAT }}"
+          source_folder: dist/apps/api
