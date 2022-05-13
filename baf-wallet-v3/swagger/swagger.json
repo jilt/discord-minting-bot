@@ -1,0 +1,192 @@
+{
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"RevokeTokenParams": {
+				"properties": {
+					"token": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"token"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"hexString": {
+				"type": "string"
+			},
+			"CreateNearAccountParams": {
+				"properties": {
+					"userID": {
+						"type": "string"
+					},
+					"nonce": {
+						"$ref": "#/components/schemas/hexString"
+					},
+					"secpSigHex": {
+						"$ref": "#/components/schemas/hexString"
+					},
+					"secpSig_s": {
+						"$ref": "#/components/schemas/hexString"
+					},
+					"edPubkey": {
+						"$ref": "#/components/schemas/hexString"
+					},
+					"edSigHex": {
+						"$ref": "#/components/schemas/hexString"
+					},
+					"accountID": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"userID",
+					"nonce",
+					"secpSigHex",
+					"secpSig_s",
+					"edPubkey",
+					"edSigHex",
+					"accountID"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"NearAccountInfo": {
+				"properties": {
+					"near_id": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"near_id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "baf-wallet",
+		"version": "0.0.0",
+		"license": {
+			"name": "MIT"
+		},
+		"contact": {}
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/discord/revoke-token": {
+			"post": {
+				"operationId": "RevokeToken",
+				"responses": {
+					"204": {
+						"description": ""
+					}
+				},
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RevokeTokenParams"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/near/account": {
+			"post": {
+				"operationId": "CreateNearAccount",
+				"responses": {
+					"204": {
+						"description": ""
+					}
+				},
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateNearAccountParams"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/near/account/{secpPubkeyB58}/nonce": {
+			"get": {
+				"operationId": "GetAccountNonce",
+				"responses": {
+					"200": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "secpPubkeyB58",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/near/account/{secpPubkeyB58}/id": {
+			"get": {
+				"operationId": "GetAccountInfo",
+				"responses": {
+					"200": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NearAccountInfo"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "secpPubkeyB58",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}
